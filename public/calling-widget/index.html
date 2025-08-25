@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Business Calling</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f8fa;
+            color: #33475b;
+            line-height: 1.4;
+        }
+
+        .calling-widget {
+            padding: 20px;
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+            border-radius: 8px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+        }
+
+        .status-dot.connected {
+            background: #25d366;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.calling {
+            background: #ff6b35;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .contact-info {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .contact-phone {
+            font-size: 14px;
+            color: #718096;
+            font-family: monospace;
+        }
+
+        .call-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #25d366;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #128c7e;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #c53030;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e2e8f0;
+        }
+
+        .permission-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .permission-notice h4 {
+            color: #856404;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .permission-notice p {
+            color: #856404;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .incoming-call {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 16px;
+            animation: shake 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(2px); }
+        }
+
+        .incoming-caller {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .incoming-phone {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+
+        .call-timer {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #25d366;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+
+        .logs {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+        }
+
+        .log-entry {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+            font-family: monospace;
+        }
+
+        .log-entry.error {
+            color: #e53e3e;
+        }
+
+        .log-entry.success {
+            color: #25d366;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="calling-widget">
+        <div class="header">
+            <div class="logo">📞</div>
+            <div class="title">WhatsApp Business Calling</div>
+            <div class="subtitle">Integrated with HubSpot CRM</div>
+        </div>
+
+        <!-- Status Card -->
+        <div class="status-card">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Initializing...</span>
+            </div>
+            <div id="availabilityToggle" class="hidden">
+                <label>
+                    <input type="checkbox" id="availabilityCheckbox"> Available for calls
+                </label>
+            </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div id="contactInfo" class="contact-info hidden">
+            <div class="contact-name" id="contactName">Loading contact...</div>
+            <div class="contact-phone" id="contactPhone"></div>
+        </div>
+
+        <!-- Incoming Call -->
+        <div id="incomingCall" class="incoming-call hidden">
+            <div class="incoming-caller" id="incomingCallerName">Incoming Call</div>
+            <div class="incoming-phone" id="incomingCallerPhone"></div>
+            <div class="call-controls">
+                <button class="btn btn-primary" id="acceptCallBtn">
+                    📞 Answer
+                </button>
+                <button class="btn btn-danger" id="rejectCallBtn">
+                    📵 Decline
+                </button>
+            </div>
+        </div>
+
+        <!-- Active Call -->
+        <div id="activeCall" class="hidden">
+            <div class="call-timer" id="callTimer">00:00</div>
+            <div class="call-controls">
+                <button class="btn btn-danger" id="hangupBtn">
+                    📵 Hang Up
+                </button>
+            </div>
+        </div>
+
+        <!-- Permission Notice -->
+        <div id="permissionNotice" class="permission-notice hidden">
+            <h4>📋 Permission Required</h4>
+            <p>A call permission request has been sent to the contact via WhatsApp. They need to approve before you can call them.</p>
+        </div>
+
+        <!-- Call Controls -->
+        <div class="call-controls">
+            <button class="btn btn-primary" id="callBtn" disabled>
+                <span class="loading hidden" id="callLoading"></span>
+                📞 Call Contact
+            </button>
+            <button class="btn btn-secondary" id="requestPermissionBtn" disabled>
+                📋 Request Permission
+            </button>
+        </div>
+
+        <!-- Logs -->
+        <div class="logs">
+            <div class="log-entry">System initialized</div>
+            <div id="logContainer"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://unpkg.com/@hubspot/calling-extensions-sdk@0.9.4/dist/calling-extensions-sdk.js"></script>
+    
+    <script>
+        class WhatsAppCallingWidget {
+            constructor() {
+                this.callingExtensions = null;
+                this.socket = null;
+                this.currentContact = null;
+                this.currentCall = null;
+                this.callTimer = null;
+                this.callStartTime = null;
+                this.isInitialized = false;
+                this.userConfig = null;
+
+                this.initializeWidget();
+            }
+
+            async initializeWidget() {
+                try {
+                    this.log('Initializing WhatsApp Calling Widget...');
+                    
+                    // Get user configuration from URL parameters or API
+                    await this.loadUserConfiguration();
+                    
+                    // Initialize HubSpot Calling Extensions SDK
+                    this.callingExtensions = new window.HubSpotCallingExtensions({
+                        debugMode: true,
+                        eventHandlers: {
+                            onDialNumber: this.handleDialNumber.bind(this),
+                            onVisibilityChanged: this.handleVisibilityChanged.bind(this),
+                            onCallEnd: this.handleCallEnd.bind(this)
+                        }
+                    });
+
+                    // Initialize Socket.IO connection
+                    this.socket = io(window.location.origin);
+                    
+                    this.socket.on('connect', () => {
+                        this.log('Connected to server', 'success');
+                        this.updateStatus('connected', 'Connected to WhatsApp Calling');
+                        
+                        // Register user with Socket.IO
+                        if (this.userConfig?.token) {
+                            this.socket.emit('register_user', { token: this.userConfig.token });
+                        }
+                    });
+
+                    this.socket.on('disconnect', () => {
+                        this.log('Disconnected from server', 'error');
+                        this.updateStatus('disconnected', 'Disconnected');
+                    });
+
+                    // Register socket event handlers
+                    this.setupSocketEvents();
+
+                    // Setup UI event handlers
+                    this.setupUIEvents();
+
+                    // Signal that the widget is ready
+                    this.callingExtensions.initialized({
+                        isLoggedIn: true,
+                        widgetSize: { height: 600, width: 400 }
+                    });
+
+                    this.isInitialized = true;
+                    this.log('Widget initialized successfully', 'success');
+
+                } catch (error) {
+                    this.log(`Initialization failed: ${error.message}`, 'error');
+                    this.updateStatus('error', 'Initialization failed');
+                }
+            }
+
+            async loadUserConfiguration() {
+                try {
+                    // Try to get config from URL parameters first
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const token = urlParams.get('token');
+                    
+                    if (token) {
+                        // Validate token with backend
+                        const response = await fetch('/api/auth/validate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token })
+                        });
+                        
+                        if (response.ok) {
+                            const config = await response.json();
+                            this.userConfig = {
+                                token,
+                                userId: config.userId,
+                                hubspotAccountId: config.hubspotAccountId,
+                                account: config.account
+                            };
+                            this.log('User configuration loaded', 'success');
+                        } else {
+                            throw new Error('Invalid authentication token');
+                        }
+                    } else {
+                        // For development/testing - use default config
+                        this.userConfig = {
+                            token: 'dev-token',
+                            userId: 'dev-user',
+                            hubspotAccountId: 'dev-account'
+                        };
+                        this.log('Using development configuration', 'info');
+                    }
+                } catch (error) {
+                    this.log(`Configuration loading failed: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+
+            setupSocketEvents() {
+                // Incoming call notification
+                this.socket.on('incoming_call', (callData) => {
+                    this.log(`Incoming call from ${callData.fromNumber}`, 'success');
+                    this.showIncomingCall(callData);
+                    
+                    // Make widget visible for incoming calls
+                    if (this.callingExtensions) {
+                        this.callingExtensions.incomingCall({
+                            phoneNumber: callData.fromNumber
+                        });
+                    }
+                });
+
+                // Call status updates
+                this.socket.on('call_status_update', (statusData) => {
+                    this.log(`Call status: ${statusData.status}`, 'success');
+                    this.handleCallStatusUpdate(statusData);
+                });
+
+                // Call accepted/rejected notifications
+                this.socket.on('call_accepted', (data) => {
+                    this.log('Call accepted', 'success');
+                    this.showActiveCall();
+                });
+
+                this.socket.on('call_rejected', (data) => {
+                    this.log('Call rejected', 'error');
+                    this.hideIncomingCall();
+                });
+
+                // Socket registration success
+                this.socket.on('registration_success', (data) => {
+                    this.log(`Registered as user: ${data.userId}`, 'success');
+                });
+
+                this.socket.on('registration_error', (data) => {
+                    this.log(`Registration failed: ${data.error}`, 'error');
+                });
+            }
+
+            setupUIEvents() {
+                // Call button
+                document.getElementById('callBtn').addEventListener('click', () => {
+                    this.initiateCall();
+                });
+
+                // Request permission button
+                document.getElementById('requestPermissionBtn').addEventListener('click', () => {
+                    this.requestCallPermission();
+                });
+
+                // Accept call button
+                document.getElementById('acceptCallBtn').addEventListener('click', () => {
+                    this.acceptIncomingCall();
+                });
+
+                // Reject call button
+                document.getElementById('rejectCallBtn').addEventListener('click', () => {
+                    this.rejectIncomingCall();
+                });
+
+                // Hang up button
+                document.getElementById('hangupBtn').addEventListener('click', () => {
+                    this.hangupCall();
+                });
+
+                // Availability checkbox
+                document.getElementById('availabilityCheckbox').addEventListener('change', (e) => {
+                    this.updateAvailability(e.target.checked);
+                });
+            }
+
+            handleDialNumber(data) {
+                this.log(`HubSpot requesting dial: ${data.phoneNumber}`, 'success');
+                
+                this.currentContact = {
+                    phoneNumber: data.phoneNumber,
+                    id: data.ownerId, // HubSpot contact ID
+                    name: data.firstName && data.lastName ? 
+                        `${data.firstName} ${data.lastName}` : 
+                        (data.firstName || data.lastName || 'Unknown Contact')
+                };
+
+                this.showContactInfo();
+                this.checkCallPermission(data.phoneNumber);
+                
+                // Enable call controls
+                document.getElementById('callBtn').disabled = false;
+                document.getElementById('requestPermissionBtn').disabled = false;
+            }
+
+            handleVisibilityChanged(data) {
+                this.log(`Widget visibility: ${data.isMinimized ? 'minimized' : 'visible'}`);
+            }
+
+            handleCallEnd() {
+                this.log('Call ended by HubSpot');
+                this.endCall();
+            }
+
+            async initiateCall() {
+                if (!this.currentContact) {
+                    this.log('No contact selected', 'error');
+                    return;
+                }
+
+                try {
+                    this.setCallButtonLoading(true);
+                    this.log(`Initiating call to ${this.currentContact.phoneNumber}`);
+
+                    // Check permission first
+                    const permissionStatus = await this.checkCallPermission(this.currentContact.phoneNumber);
+                    
+                    if (!permissionStatus.hasPermission) {
+                        if (permissionStatus.reason === 'no_permission_record' || 
+                            permissionStatus.reason === 'permission_not_granted') {
+                            this.showPermissionNotice();
+                            return;
+                        } else {
+                            throw new Error(`Permission denied: ${permissionStatus.reason}`);
+                        }
+                    }
+
+                    // Make API call to initiate outbound call
+                    const response = await fetch('/api/calling/outbound', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            phoneNumber: this.currentContact.phoneNumber,
+                            contactId: this.currentContact.id,
+                            hubspotAccountId: this.userConfig?.hubspotAccountId,
+                            userId: this.userConfig?.userId
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.currentCall = {
+                            id: result.callId,
+                            twilioCallSid: result.twilioCallSid,
+                            engagementId: result.engagementId,
+                            status: 'initiated'
+                        };
+
+                        // Notify HubSpot that call has started
+                        this.callingExtensions.outgoingCall({
+                            phoneNumber: this.currentContact.phoneNumber
+                        });
+
+                        // Send call data to HubSpot with engagement ID
+                        if (result.engagementId) {
+                            this.callingExtensions.sendCallData({
+                                engagementId: result.engagementId
+                            });
+                        }
+
+                        this.log('Call initiated successfully', 'success');
+                        this.updateStatus('calling', 'Calling...');
+                        
+                    } else {
+                        throw new Error(result.error || 'Failed to initiate call');
+                    }
+
+                } catch (error) {
+                    this.log(`Call initiation failed: ${error.message}`, 'error');
+                    this.updateStatus('error', 'Call failed');
+                } finally {
+                    this.setCallButtonLoading(false);
+                }
+            }
+
+            async requestCallPermission() {
+                if (!this.currentContact) return;
+
+                try {
+                    this.log(`Requesting call permission for ${this.currentContact.phoneNumber}`);
+
+                    const response = await fetch('/api/calling/request-permission', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            phoneNumber: this.currentContact.phoneNumber,
+                            hubspotAccountId: this.userConfig?.hubspotAccountId
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.status === 'permission_requested') {
+                        this.showPermissionNotice();
+                        this.log('Permission request sent', 'success');
+                    } else if (result.status === 'rate_limited') {
+                        this.log(`Permission request rate limited: ${result.reason}`, 'error');
+                    } else {
+                        this.log(`Permission request failed: ${result.error}`, 'error');
+                    }
+
+                } catch (error) {
+                    this.log(`Permission request failed: ${error.message}`, 'error');
+                }
+            }
+
+            async checkCallPermission(phoneNumber) {
+                try {
+                    const response = await fetch(
+                        `/api/calling/permission-status/${encodeURIComponent(phoneNumber)}/${this.userConfig?.hubspotAccountId}`
+                    );
+                    
+                    return await response.json();
+                } catch (error) {
+                    this.log(`Permission check failed: ${error.message}`, 'error');
+                    return { hasPermission: false, reason: 'check_failed' };
+                }
+            }
+
+            showIncomingCall(callData) {
+                document.getElementById('incomingCall').classList.remove('hidden');
+                document.getElementById('incomingCallerName').textContent = 
+                    callData.contact?.properties?.firstname ? 
+                    `${callData.contact.properties.firstname} ${callData.contact.properties.lastname || ''}`.trim() :
+                    'Unknown Caller';
+                document.getElementById('incomingCallerPhone').textContent = callData.fromNumber;
+                
+                this.currentCall = {
+                    id: callData.callId,
+                    twilioCallSid: callData.callSid,
+                    status: 'ringing'
+                };
+            }
+
+            hideIncomingCall() {
+                document.getElementById('incomingCall').classList.add('hidden');
+            }
+
+            showActiveCall() {
+                this.hideIncomingCall();
+                document.getElementById('activeCall').classList.remove('hidden');
+                this.startCallTimer();
+                this.updateStatus('in-call', 'Call in progress');
+
+                // Notify HubSpot call is answered
+                if (this.callingExtensions) {
+                    this.callingExtensions.callAnswered();
+                }
+            }
+
+            acceptIncomingCall() {
+                if (this.currentCall) {
+                    this.socket.emit('accept_call', {
+                        callSid: this.currentCall.twilioCallSid,
+                        callId: this.currentCall.id
+                    });
+                    this.showActiveCall();
+                }
+            }
+
+            rejectIncomingCall() {
+                if (this.currentCall) {
+                    this.socket.emit('reject_call', {
+                        callSid: this.currentCall.twilioCallSid,
+                        callId: this.currentCall.id
+                    });
+                    this.hideIncomingCall();
+                    this.endCall();
+                }
+            }
+
+            hangupCall() {
+                this.endCall();
+            }
+
+            endCall() {
+                if (this.callTimer) {
+                    clearInterval(this.callTimer);
+                    this.callTimer = null;
+                }
+
+                document.getElementById('activeCall').classList.add('hidden');
+                document.getElementById('incomingCall').classList.add('hidden');
+                
+                this.updateStatus('connected', 'Connected');
+                
+                // Notify HubSpot call ended
+                if (this.callingExtensions && this.currentCall) {
+                    this.callingExtensions.callEnded();
+                    
+                    // Send call data to HubSpot
+                    if (this.currentCall.engagementId) {
+                        this.callingExtensions.sendCallData({
+                            engagementId: this.currentCall.engagementId
+                        });
+                    }
+                }
+
+                this.currentCall = null;
+                this.callStartTime = null;
+            }
+
+            startCallTimer() {
+                this.callStartTime = Date.now();
+                this.callTimer = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - this.callStartTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                    const seconds = (elapsed % 60).toString().padStart(2, '0');
+                    document.getElementById('callTimer').textContent = `${minutes}:${seconds}`;
+                }, 1000);
+            }
+
+            handleCallStatusUpdate(statusData) {
+                if (this.currentCall && this.currentCall.twilioCallSid === statusData.callSid) {
+                    this.currentCall.status = statusData.status;
+                    
+                    switch (statusData.status) {
+                        case 'answered':
+                            this.showActiveCall();
+                            break;
+                        case 'completed':
+                        case 'failed':
+                        case 'no-answer':
+                        case 'busy':
+                            this.endCall();
+                            break;
+                    }
+                }
+            }
+
+            showContactInfo() {
+                if (this.currentContact) {
+                    document.getElementById('contactInfo').classList.remove('hidden');
+                    document.getElementById('contactName').textContent = this.currentContact.name;
+                    document.getElementById('contactPhone').textContent = this.currentContact.phoneNumber;
+                }
+            }
+
+            showPermissionNotice() {
+                document.getElementById('permissionNotice').classList.remove('hidden');
+                setTimeout(() => {
+                    document.getElementById('permissionNotice').classList.add('hidden');
+                }, 10000); // Hide after 10 seconds
+            }
+
+            updateStatus(status, text) {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                
+                statusDot.className = `status-dot ${status}`;
+                statusText.textContent = text;
+
+                if (status === 'connected') {
+                    document.getElementById('availabilityToggle').classList.remove('hidden');
+                }
+            }
+
+            updateAvailability(isAvailable) {
+                if (this.socket) {
+                    this.socket.emit('update_availability', { isAvailable });
+                    this.log(`Availability updated: ${isAvailable ? 'available' : 'unavailable'}`);
+                }
+            }
+
+            setCallButtonLoading(loading) {
+                const button = document.getElementById('callBtn');
+                const loadingSpinner = document.getElementById('callLoading');
+                
+                if (loading) {
+                    loadingSpinner.classList.remove('hidden');
+                    button.disabled = true;
+                } else {
+                    loadingSpinner.classList.add('hidden');
+                    button.disabled = false;
+                }
+            }
+
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${type}`;
+                logEntry.textContent = `${timestamp}: ${message}`;
+                
+                const container = document.getElementById('logContainer');
+                container.appendChild(logEntry);
+                container.scrollTop = container.scrollHeight;
+
+                console.log(`[WhatsApp Calling] ${message}`);
+            }
+        }
+
+        // Initialize widget when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new WhatsAppCallingWidget();
+        });
+    </script>
+</body>
+</html>
